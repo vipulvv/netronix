@@ -1,0 +1,2 @@
+# netronix
+static pages
