@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link href="https://fonts.googleapis.com/css?family=Raleway" rel="stylesheet">
+        <title>Subnetting</title>
+        <style>
+            body {
+                background-color:gray;
+                font-family:Raleway;
+                font-size:25px;
+                color:white;
+            }
+            label {
+                text-shadow: 3px 3px 6px black;
+                width:100%;
+            }
+            input {
+                font-family:Arial;
+                font-size:20px;
+                box-shadow: 1px 1px 8px 0px black;
+                border: 2px solid white;
+                border-radius: 5px;
+                padding: 2px;
+            }
+            input[disabled] {
+                color:black;
+            }
+            div {
+                margin:0 auto;
+                background-color:dimgrey;
+                border-radius:10px;
+                width:700px;
+            }
+            table {
+                margin:100px auto;
+                padding:75px 0px;
+                height:400px;
+            }
+            tr {
+                height:10px;
+                margin-bottom:10px;
+            }
+            td {
+                padding-right: 10px;
+                padding-left: 10px;
+            }
+        
+        
+        </style>
+        <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+        
+        <script>
+            var ip;
+            var mask;
+            var ipTrue;
+            var maskTrue;
+            var ipArray;
+            var step;
+            var maskPos;
+            var ipNet;
+            var net;
+            var networkAddr;
+            var broadcastAddr;
+            var hosts;
+            var subnets;
+            
+            function calcSubnet() {
+                ipArray = ip.split(".");
+                if(mask == "255")
+                {
+                    mask = new RegExp (mask,"g");
+                    maskPos = fullmask.match(mask).length;
+                    mask = 0;
+                }
+                else if(mask == 0)
+                {
+                    
+                }
+                else
+                {
+                    maskPos = fullmask.split(".").indexOf(mask);
+                };
+                ipNet = ipArray[maskPos];
+                step = 256 - mask;
+                net = (ipNet - (ipNet % step)).toString();
+                
+                ipArray[maskPos] = net;
+                for(x = maskPos+1;x<=3;x++)
+                {
+                    ipArray[x] = 0;
+                };
+                
+                networkAddr = ipArray.join(".");
+                console.log(networkAddr);
+                
+                ipArray[maskPos] = Number(net) + step - 1;;
+                for(x = maskPos+1;x<=3;x++)
+                {
+                    ipArray[x] = "255";
+                };
+                
+                broadcastAddr = ipArray.join(".");
+                console.log(broadcastAddr);
+                
+                for(x = maskPos;x<=3;x++)
+                {
+                    
+                };
+                $("#network").val(networkAddr);
+                $("#broadcast").val(broadcastAddr);
+                
+                hosts = step*(Math.pow(256,3-maskPos)) - 2;
+                //hosts = Math.log2(Math.pow(256,maskPos-1)*step) - 2;
+                $("#hosts").val(hosts);
+                $("#prefix").val("/" + (maskPos * 8 + Math.log2(Math.pow(2,8 - Math.log2(step)))).toString());
+                
+                if(hosts < 0)
+                {
+                    invalidSubnet();
+                }
+            };
+            
+            function invalidSubnet() {
+                $("#network").val("Invalid input");
+                $("#broadcast").val("Invalid input");
+                $("#hosts").val("Invalid input");
+                $("#prefix").val("Invalid input");
+            };
+            
+            $(document).ready(function() {
+                
+                $("#ipaddr").on('input',function() {
+                    ip = $("#ipaddr").val();
+                    for(x = 0;x<=3;x++)
+                    {
+                        var temp = ip.split(".")[x];
+                        if(temp > 255 || temp < 0 || !((temp%2) || temp != 255))
+                        {
+                            //console.log("testing: " + fullmask.split(".")[x]);
+                            invalidSubnet();
+                            return;
+                        };
+                    };
+                    if(ip.match(/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/) != null)
+                    {
+                        ipTrue = true;
+                    }
+                    else
+                    {
+                        ipTrue = false;
+                    };
+                    
+                    if(ipTrue && maskTrue)
+                    {
+                        calcSubnet();
+                    };
+                });
+                $("#subnetmask").on('input',function() {
+                    mask = $("#subnetmask").val();
+                    fullmask = mask;
+                    for(x = 0;x<=3;x++)
+                    {
+                        var temp = fullmask.split(".")[x];
+                        if(temp > 255 || temp < 0 || !((temp%2) || temp != 255))
+                        {
+                            //console.log("testing: " + fullmask.split(".")[x]);
+                            invalidSubnet();
+                            return;
+                        };
+                    };
+                    if(mask.match(/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/) != null)
+                    {
+                        while(mask.search(/\.0/g) > -1)
+                        {
+                            mask = mask.replace(".0","");
+                        };
+
+                        while(mask.search(/\./g) > -1)
+                        {
+                            mask = mask.slice(mask.search(/\./g)+1,mask.length);
+                        };
+                            console.log(mask);
+                        maskTrue = true;
+                    }
+                    else
+                    {
+                        maskTrue = false;
+                    };
+                    
+                    if(ipTrue && maskTrue)
+                    {
+                        calcSubnet();
+                    };
+                });
+                
+            });
+        </script>
+        
+    </head>
+    <body>
+        <div>
+            <table>
+                <tr>
+                    <td><label for="ipaddr">IP Address:</label></td>
+                    <td><input id="ipaddr" type="text"></td>
+                </tr>
+                <tr>
+                    <td><label for="subnetmask">Subnet Mask:</label></td>
+                    <td><input id="subnetmask" type="text"></td>
+                </tr>
+                <!--<tr style="background-color:red;border:1px solid blue;">
+                    <td></td><td></td>
+                </tr>-->
+                <tr>
+                    <td><label for="network">Network Address:</label></td>
+                    <td><input id="network" type="text" disabled></td>
+                </tr>
+                <tr>
+                    <td><label for="broadcast">Broadcast Address:</label></td>
+                    <td><input id="broadcast" disabled></td>
+                </tr>
+                <tr>
+                    <td><label for="prefix">Prefix</label></td>
+                    <td><input id="prefix" disabled></td>
+                </tr>
+                <tr>
+                    <td><label for="hosts"># of Hosts:</label></td>
+                    <td><input id="hosts" disabled></td>
+                </tr>
+                <!--<tr>
+                    <td><label for="subnets"># of Subnets:</label></td>
+                    <td><input id="subnets"></td>
+                </tr>-->
+            </table>
+        </div>
+    </body>
+</html>
